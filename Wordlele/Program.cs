@@ -98,7 +98,7 @@ namespace Wordlele
             Log(guess);
             while (true)
             {
-                if (wordle.TryGuess(guess?.ToUpperInvariant(), out int[] result))
+                if (wordle.TryGuess(guess?.ToUpperInvariant(), out byte[] result))
                 {
                     string d = $"{string.Join("", result)}";
                     Log(d);
@@ -133,7 +133,7 @@ namespace Wordlele
             {
                 Console.WriteLine("Guess:");
                 string guess = Console.ReadLine();
-                if (wordle.TryGuess(guess?.ToUpperInvariant(), out int[] result))
+                if (wordle.TryGuess(guess?.ToUpperInvariant(), out byte[] result))
                 {
                     guessCnt++;
                     string d = $"{string.Join("", result)}";

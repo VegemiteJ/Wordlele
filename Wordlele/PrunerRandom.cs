@@ -1,36 +1,45 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Runtime.CompilerServices;
 
 namespace Wordlele
 {
-    internal class PrunerRandom : IWordleSolver
+    public class PrunerRandom : IWordleSolver
     {
         private IReadOnlyList<string> Guessable;
 
+        private int ForcedGuess = -1;
         private int LastGuess;
         private List<int> ValidIndexes;
 
         private bool EnableLogging = false;
-        private static Random Random = new Random(789);
+        private Random Random = new Random(789);
 
-        internal PrunerRandom(IReadOnlyList<string> wordList, IReadOnlyList<string> guessList, bool enableLogging, string forcedFirstWord = null)
+        public PrunerRandom(IReadOnlyList<string> wordList, IReadOnlyList<string> guessList, bool enableLogging, string forcedFirstWord = null, Random randOverride = null)
         {
             var tmp = wordList.Union(guessList).Distinct().ToList();
             Guessable = tmp;
             this.EnableLogging = enableLogging;
+            this.Random = randOverride ?? Random;
             Reset();
             if (forcedFirstWord != null)
             {
-                LastGuess = tmp.FindIndex((word) => word == forcedFirstWord);
-                if (LastGuess < 0)
+                ForcedGuess = tmp.FindIndex((word) => word == forcedFirstWord);
+                if (ForcedGuess < 0)
                 {
                     throw new ArgumentException($"Forced first guess isn't in list. Guess: {forcedFirstWord}");
                 }
+                LastGuess = ForcedGuess;
             }
+        }
+
+        public void Reset()
+        {
+            ValidIndexes = Enumerable.Range(0, Guessable.Count).ToList();
+            LastGuess = ForcedGuess < 0 ? Random.Next(ValidIndexes.Count) : ForcedGuess;
+        }
+
+        public int GetPossibleGuessCount()
+        {
+            return ValidIndexes.Count;
         }
 
         public string GenerateGuess()
@@ -38,7 +47,7 @@ namespace Wordlele
             return Guessable[ValidIndexes[LastGuess]];
         }
 
-        public string GenerateGuess(int[] lastState)
+        public string GenerateGuess(byte[] lastState)
         {
             // Remove previous guess from consideration
             string prevGuess = Guessable[ValidIndexes[LastGuess]];
@@ -58,18 +67,12 @@ namespace Wordlele
             return Guessable[ValidIndexes[LastGuess]];
         }
 
-        public string GenerateGuess(List<int[]> lastStates, List<string> previouesGuesses)
+        public string GenerateGuess(List<byte[]> lastStates, List<string> previouesGuesses)
         {
             throw new NotImplementedException();
         }
 
-        public void Reset()
-        {
-            ValidIndexes = Enumerable.Range(0, Guessable.Count).ToList();
-            LastGuess = Random.Next(ValidIndexes.Count);
-        }
-
-        private void PruneAllNotContainingMissingLetters(string prevGuess, int[] lastState)
+        private void PruneAllNotContainingMissingLetters(string prevGuess, byte[] lastState)
         {
             sbyte[] CharSet = new sbyte[26];
             // Count the number of each letter
@@ -113,7 +116,7 @@ namespace Wordlele
             }
         }
 
-        private void PruneAllNotContainingGuaranteedLetters(string prevGuess, int[] lastState)
+        private void PruneAllNotContainingGuaranteedLetters(string prevGuess, byte[] lastState)
         {
             sbyte[] CharSet = new sbyte[26];
             // Count the number of each letter
@@ -161,7 +164,7 @@ namespace Wordlele
             }
         }
 
-        private void PruneAllNotContainingGuaranteedSpots(string prevGuess, int[] lastState)
+        private void PruneAllNotContainingGuaranteedSpots(string prevGuess, byte[] lastState)
         {
             for (int idx = 0; idx < ValidIndexes.Count; idx++)
             {
