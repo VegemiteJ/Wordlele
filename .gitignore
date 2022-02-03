@@ -7,8 +7,8 @@
 *.sln.docstates
 
 # Benchmark files
-#*.testlog
-#*.manifest
+*.testlog
+*.manifest
 .vs/*
 
 # Build results
