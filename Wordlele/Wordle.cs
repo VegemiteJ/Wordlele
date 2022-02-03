@@ -1,20 +1,16 @@
-﻿#define SAFETY
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Runtime.CompilerServices;
 
 namespace Wordlele
 {
-    internal class Wordle
+    public class Wordle
     {
         private string Word;
         private IReadOnlySet<string> ValidGuesses;
-
         private byte[] CharSet = new byte[26];
 
-        internal Wordle(string word, IReadOnlyList<string> validGuesses)
+        private List<byte[]> LastResult = new List<byte[]>();
+
+        public Wordle(string word, IReadOnlyList<string> validGuesses)
         {
             this.Word = word.Trim().ToUpperInvariant();
             foreach (char c in Word)
@@ -24,9 +20,10 @@ namespace Wordlele
             this.ValidGuesses = new HashSet<string>(validGuesses);
         }
 
-        public int[] UnsafeGuess(string guess)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public byte[] UnsafeGuess(string guess)
         {
-            var result = new int[5];
+            var result = new byte[5];
             byte[] guessCharSet = new byte[26];
             // First fill in all the spots where it is exact
             for (int i = 0; i < guess.Length; i++)
@@ -58,10 +55,12 @@ namespace Wordlele
                     result[i] = 0;
                 }
             }
+            LastResult.Add(result);
             return result;
         }
 
-        public bool TryGuess(string guess, out int[] result)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryGuess(string guess, out byte[] result)
         {
             result = null;
             if (guess == null)
@@ -72,7 +71,7 @@ namespace Wordlele
             {
                 return false;
             }
-            if (guess.Any(c => !Char.IsUpper(c) || (int)c < 65 || (int)c > 90))
+            if (guess.Any(c => !char.IsUpper(c) || (int)c < 65 || (int)c > 90))
             {
                 return false;
             }
@@ -83,6 +82,57 @@ namespace Wordlele
 
             result = UnsafeGuess(guess);
             return true;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public byte[] GetLastResult()
+        {
+            if (LastResult.Count == 0)
+            {
+                throw new InvalidOperationException("No last result");
+            }
+            return LastResult.Last();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Reset()
+        {
+            LastResult.Clear();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public int PlayGame(IWordleSolver solver, bool Unsafe = false)
+        {
+            string guess = solver.GenerateGuess();
+            int guessCnt = 1;
+            while (true)
+            {
+                byte[] result;
+                if (Unsafe)
+                {
+                    result = UnsafeGuess(guess);
+                }
+                else if (!TryGuess(guess, out result))
+                {
+                    throw new InvalidOperationException("Not a word");
+                }
+
+                // This way is probably slightly faster than All((b) => b == 2))
+                if (result[0] == 2
+                    && result[1] == 2
+                    && result[2] == 2
+                    && result[3] == 2
+                    && result[4] == 2)
+                {
+                    break;
+                }
+                else
+                {
+                    guess = solver.GenerateGuess(result);
+                    guessCnt++;
+                }
+            }
+            return guessCnt;
         }
     }
 }

@@ -6,6 +6,11 @@
 *.user
 *.sln.docstates
 
+# Benchmark files
+*.testlog
+*.manifest
+.vs/*
+
 # Build results
 
 [Dd]ebug/

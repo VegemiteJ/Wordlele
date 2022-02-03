@@ -6,12 +6,18 @@ using System.Threading.Tasks;
 
 namespace Wordlele
 {
-    internal interface IWordleSolver
+    public interface IWordleSolver
     {
         /// <summary>
         /// Reset the internal state for a new game
         /// </summary>
         void Reset();
+
+        /// <summary>
+        /// Returns and int representing the number of possible words
+        /// </summary>
+        /// <returns></returns>
+        int GetPossibleGuessCount();
 
         /// <summary>
         /// Generate first guess
@@ -25,7 +31,7 @@ namespace Wordlele
         /// </summary>
         /// <param name="lastState"></param>
         /// <returns></returns>
-        string GenerateGuess(int[] lastState);
+        string GenerateGuess(byte[] lastState);
 
         /// <summary>
         /// Stateless method
@@ -33,6 +39,6 @@ namespace Wordlele
         /// </summary>
         /// <param name="lastStates"></param>
         /// <returns></returns>
-        string GenerateGuess(List<int[]> lastStates, List<string> previouesGuesses);
+        string GenerateGuess(List<byte[]> lastStates, List<string> previouesGuesses);
     }
 }
