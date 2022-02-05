@@ -9,7 +9,7 @@
 # Benchmark files
 *.testlog
 *.manifest
-*.vs/*
+*.vs*
 
 # Build results
 
